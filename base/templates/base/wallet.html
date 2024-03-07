@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wallet Details</title>
+  <style>
+    /* Add basic styling for the page */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h1, h2 {
+      margin-bottom: 15px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .button {
+      background-color: #4CAF50; /* Green color */
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background-color: #45A049; /* Green hover color */
+    }
+  </style>
+</head>
+<body>
+  <h1>User Details</h1>
+  <ul>
+    <li>Username: {{ user.username }}</li>
+    <li>Phone: {{ user.phone }}</li>
+    <li>Balance : {{wallet.balance}}</li>
+  </ul>
+
+  <h2>Wallet Transactions</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Description</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for transaction in transactions %}
+      <tr>
+        <td>{{ transaction.timestamp }}</td>
+        <td>{{ transaction.amount }}</td>
+        <td>{{ transaction.description }}</td>
+        <td>{{transaction.status}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <a href="{% url 'deposit' %}" class="button">Deposit</a>
+  <a href="{% url 'withdraw' %}" class="button">Withdraw</a>
+</body>
+</html>

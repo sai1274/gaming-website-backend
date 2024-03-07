@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Money to Wallet</title>
+</head>
+<body>
+    <h1>Add Money to Wallet</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" name="amount" min="1" step="1" required>
+
+        <label for+="transaction_id">Transactions ID</label>
+        <input type="text" id="transaction_id" name="transaction_id" required>
+
+        <!-- <QR Code to pay money should be displayed> -->
+        <!-- <TODO></TODO> -->
+        <br>
+        <button type="submit">Add Money</button>
+    </form>
+
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+</body>
+</html>

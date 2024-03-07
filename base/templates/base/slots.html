@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Room Card Viewer</title>
+    <!-- <link rel="stylesheet" type="text/css" href="/static/css/room_card_viewer.css"> -->
+    <!-- <script src="/static/js/room_card_viewer.js"></script> -->
+</head>
+<body>
+    <div id="wallet">
+        <a href="{% url 'wallet' %}">Manage Wallet</a>
+    </div>
+    <div id="user">
+        <a href="{% url 'user-info' %}">User</a>
+    </div>
+    {% if request.user.is_authenticated %}
+        <h4>Welcome, {{ user.username }}</h4>
+        <a href="{% url 'logout' %}">logout</a>
+    {% else %}
+        <a href="{% url 'login' %}">Login</a>
+    {% endif %}
+    {% for room in rooms %}
+        <div class="room-card">
+            <h2>Tournament Name : {{ room.tournament_name }}</h2>
+            <p>Slots Available : {{room.slots_available}}</p>
+            <p>Entry Fee : {{room.entry_fee}}</p>
+            <p>Total Slots : {{room.slots_total}}</p>
+            <p>First prize : {{room.First_prize}}</p>
+            <p>Scond Prize : {{room.Second_prize}}</p>
+            <p>Third Prize : {{room.Third_prize}}</p>
+            {% if room.Fourth_prize %}
+                <p>Fourth Prize : {{room.Fourth_prize}}</p>
+            {% endif %}
+            <form method="GET">
+                <input type="hidden" name="room_id" value="{{ room.id }}">
+                <button type="submit">Book Slot</button>
+            </form>
+            <hr>
+        </div>
+    {% endfor %}
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!-- FILEPATH: /Users/sampsamp/Desktop/website/base/templates/base/user_info.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>User Profile</h1>
+    <div>
+        <!-- <img src="user_avatar.jpg" alt="User Avatar"> -->
+        <h2>Hi, {{user_data.username}}</h2>
+        <p>Email: {{user_data.email}}</p>
+        <h3>Tournaments Registered</h3>
+        {% for tournament in tournaments_participated %}
+            <p>{{tournament}}</p>
+            <p>{{tournament.tournment_name}}</p>
+        {% endfor %}
+        {% if not tournaments_participated %}
+            <p>No tournaments registered</p>
+        {% endif %}
+
+    </div>
+</body>
+</html>
