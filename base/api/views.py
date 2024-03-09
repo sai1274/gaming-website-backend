@@ -127,7 +127,13 @@ def send_registration_email(user):
 def wallet(request):
     wallet = Wallet.objects.get(user=request.user)
     serializer = WalletSerializer(wallet)
-    return Response(serializer.data)
+    transactions = Transaction.objects.filter(user=request.user)
+    transactions_serializer = TransactionSerializer(transactions, many=True)
+    data = {
+        'wallet': serializer.data,
+        'transactions': transactions_serializer.data
+    }
+    return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

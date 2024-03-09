@@ -41,7 +41,7 @@ class Tournament(models.Model):
     participant_team_name = models.ManyToManyField(TeamDetail, related_name="participant_team_name", blank=True)
 
     def __str__(self) -> str:
-        return self.tournament_name 
+        return self.tournament_name
 
 class Matches(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)

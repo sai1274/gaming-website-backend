@@ -44,6 +44,7 @@ class TransactionSerializer(serializers.Serializer):
 
 
 class TournamentSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     tournament_name = serializers.CharField(max_length=255)
     slots_available = serializers.IntegerField()
     slots_total = serializers.IntegerField()
