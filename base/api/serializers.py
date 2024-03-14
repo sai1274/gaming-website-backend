@@ -1,7 +1,7 @@
-from base.models import CustomUser, Tournament
+from base.models import CustomUser, Tournament, TeamDetail
 from rest_framework import serializers
 
-class MatchesSerializer(serializers.Serializer):
+class MatchSerializer(serializers.Serializer):
     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())  # Assuming user is a foreign key
     match_number = serializers.CharField(max_length=255)
 
@@ -15,6 +15,7 @@ class UserSerializer(serializers.Serializer):
     email = serializers.EmailField()
     phone = serializers.CharField(max_length=15)
     mpin = serializers.CharField(max_length=6)
+    state = serializers.CharField(max_length=255)
 
     def validate(self, attrs):
         # Add custom validation logic here if needed
@@ -67,15 +68,25 @@ class TournamentSerializer(serializers.Serializer):
 
 
 class TeamDetailSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     team_name = serializers.CharField(max_length=255)
     team_leader = serializers.CharField(max_length=255)
+    in_game_name = serializers.CharField(max_length=255)
     phone_number = serializers.CharField(max_length=15)
     optional_phone_number = serializers.CharField(max_length=15, required=False)
 
     def validate(self, attrs):
         # Add custom validation logic here if needed
+        team_leader_username = attrs.get('team_leader')
+        try:
+            team_leader = CustomUser.objects.get(username=team_leader_username)
+            attrs['team_leader'] = team_leader  # Assign the CustomUser instance to team_leader field
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError("Team leader with provided username does not exist")
+        
         return attrs
+    
+    def create(self, validated_data):
+        return TeamDetail.objects.create(**validated_data)
 
 # Path: api/views.py
-# class MatchesSerializer(serializers.Serializer):
-    # Todo: Add the model to be serialized here

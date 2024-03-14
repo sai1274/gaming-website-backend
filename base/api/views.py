@@ -1,14 +1,29 @@
-from .serializers import UserSerializer, WalletSerializer, TransactionSerializer, TournamentSerializer, TeamDetailSerializer, MatchesSerializer
+from .serializers import UserSerializer, WalletSerializer, TransactionSerializer, TournamentSerializer, TeamDetailSerializer, MatchSerializer
 from rest_framework.decorators import api_view, permission_classes
-from base.models import CustomUser, Wallet, Transaction, Tournament, TeamDetail, Matches
+from base.models import CustomUser, Wallet, Transaction, Tournament, TeamDetail, Match
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from django.core.mail import send_mail
 from django.contrib.auth import login, logout, get_user_model, authenticate
-from django.shortcuts import redirect
-from rest_framework.renderers import JSONRenderer
+from rest_framework_simplejwt.tokens import RefreshToken,Token
+from rest_framework_simplejwt.exceptions import TokenError
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def get_new_token(request):
+    print(request.data.get('refresh'))
+    try:
+      print("here")
+      refresh_token = request.data.get('refresh')
+      print("here")
+      
+      token_obj = RefreshToken(refresh_token)
+      print("here")
+      new_token = token_obj.access_token
+      return Response({'token': str(new_token)}, status=status.HTTP_200_OK)
+    except TokenError as e:
+      return Response(str(e), status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -24,7 +39,7 @@ def create_team(request):
     serializer = TeamDetailSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({'team_id' : serializer.id}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET','POST'])
@@ -41,7 +56,7 @@ def users(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def book_slot(request, pk):
     try:
@@ -60,16 +75,20 @@ def book_slot(request, pk):
         serializer = TournamentSerializer(tournament)
         return Response({"message": "Slot already booked", "tournament": serializer.data}, status=status.HTTP_200_OK)
 
+    print(request, dict(request.data))
+    team = TeamDetail.objects.create(team_leader=request.user, team_name=request.data['team_name'], in_game_name=request.data['in_game_name'], phone_number=request.data['phone_number'], optional_phone_number=request.data['optional_phone_number'])
+    tournament.participant_team_name.add(team)
     tournament.slots_available -= 1
     tournament.participants.add(request.user)
+    transaction = Transaction.objects.create(user=request.user, amount=tournament.entry_fee, description=f"Tournament entry fee, {tournament.tournament_name}", status="Approved")
+    transaction.save()
     user_wallet.balance -= tournament.entry_fee
     user_wallet.save()
-
     # Allow subsequent team association (assuming team_id is provided in request):
-    if request.method == 'POST' and 'team_id' in request.POST:  # Check for POST method and team_id
+    if 'team_id' in request.POST:  # Check for POST method and team_id
         try:
             team = TeamDetail.objects.get(pk=request.POST['team_id'])
-            tournament.participant_team_name.add(team)
+            
         except (KeyError, TeamDetail.DoesNotExist):
             return Response({'error': 'Invalid or non-existent team details provided'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -77,16 +96,20 @@ def book_slot(request, pk):
     serializer = TournamentSerializer(tournament)
     return Response({"message": "Slot booked successfully", "tournament": serializer.data}, status=status.HTTP_200_OK)
 
-
-@api_view(['POST','GET'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def custom_login(request):
     username = request.data.get('username')
     password = request.data.get('password')
-    user = authenticate(request,username=username, password=password)
+    user = authenticate(request, username=username, password=password)
+    
     if user is not None:
-            login(request, user)
-            return redirect("slots")
+        login(request, user)
+        refresh = RefreshToken.for_user(user)
+        # print("search", str(refresh), str(refresh.access_token))
+        mpin = CustomUser.objects.get(username=username).mpin
+        return Response({'refresh': str(refresh), 'access': str(refresh.access_token), 'mpin' : mpin}, status=status.HTTP_200_OK)
+    
     return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST'])
@@ -98,8 +121,9 @@ def register(request):
     email = data.get('email')
     phone = data.get('phoneNumber')
     mpin = data.get('mpin')
+    state = data.get('state')
 
-    if not all([username, password, email, phone, mpin]):
+    if not all([username, password, email, phone, mpin, state]):
         return Response({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
 
     CustomUser = get_user_model()
@@ -139,7 +163,7 @@ def wallet(request):
 @permission_classes([IsAuthenticated])
 def deposit(request):
     amount = int(request.data.get("amount"))
-    transaction_id = request.data.get("transaction_id")
+    transaction_id = request.data.get("utrid")
     wallet = Wallet.objects.get(user=request.user)
     wallet.add_transaction(amount, transaction_id)
     serializer = WalletSerializer(wallet)
@@ -164,33 +188,66 @@ def custom_logout(request):
 def user_info(request):
     user = request.user
     user_data = CustomUser.objects.get(username=user)
-    tournaments_participated = Tournament.objects.filter(participants__username=user)
-
     serializer_context = {'request': request}  # Include request for potential contextual information
     user_serializer = UserSerializer(user_data, context=serializer_context)
+
+    return Response(user_serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def user_tournaments(request):
+    user = request.user
+    tournaments_participated = Tournament.objects.filter(participants__username=user)
+
+    serializer_context = {'request': request}
     tournaments_serializer = TournamentSerializer(tournaments_participated, many=True, context=serializer_context)
-
-    data = {
-        'user_data': user_serializer.data,
-        'tournaments_participated': tournaments_serializer.data
-    }
-
-    return Response(data, status=status.HTTP_200_OK)
+    return Response(tournaments_serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def match_details(request, pk):
   try:
     tournament = Tournament.objects.get(pk=pk)
-    matches = tournament.matches_set.all()  # Retrieve related matches
+    match = tournament.Match_set.all()  # Retrieve related Match
 
     serializer = TournamentSerializer(tournament)
-    matches_serializer = MatchesSerializer(matches, many=True)  # Serialize multiple matches
+    match_serializer = MatchSerializer(match, many=True)  # Serialize multiple matches
 
     return Response({
       'data': serializer.data,
-      'matches': matches_serializer.data,  # Use serialized match data
-      'all_matches': MatchesSerializer(Matches.objects.all(), many=True).data  # Serialize all matches separately
+      'match': match_serializer.data,  # Use serialized match data
+      'all_matches': MatchSerializer(Match.objects.all(), many=True).data  # Serialize all matches separately
     }, status=status.HTTP_200_OK)
 
   except Tournament.DoesNotExist:
     return Response({"error": "Tournament not found"}, status=status.HTTP_404_NOT_FOUND)
+  
+@api_view(['POST'])
+def change_phonenumber(request):
+    user = request.user
+    new_phone = request.data.get('phoneNumber')
+    password = request.data.get('password')
+    if not user.check_password(password):
+        return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+    user.phone = new_phone
+    user.save()
+    return Response({'message': 'Phone number changed successfully'}, status=status.HTTP_200_OK)
+
+def change_email(request):
+    user = request.user
+    new_email = request.data.get('new_email')
+    password = request.data.get('password')
+    if not user.check_password(password):
+        return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+    user.email = new_email
+    user.save()
+    return Response({'message': 'Email changed successfully'}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def change_mpin(request):
+    user = request.user
+    new_mpin = request.data.get('new_mpin')
+    password = request.data.get('password')
+    if not user.check_password(password):
+        return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+    user.mpin = new_mpin
+    user.save()
+    return Response({'message': 'MPIN changed successfully'}, status=status.HTTP_200_OK)

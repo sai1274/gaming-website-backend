@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -139,6 +140,19 @@ CORS_ALLOWED_ORIGINS = [
 APPEND_SLASH=False
 CORS_ALLOW_ALL_ORIGINS: True
 
-DEFAULT_AUTHENTICATION_CLASSES = [
-    "rest_framework.authentication.BasicAuthentication",
+CORS_ALLOW_CREDENTIALS = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:3000",
 ]
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=3650),  # 10 years
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=3650),  # 10 years
+}

@@ -6,6 +6,7 @@ from django.utils import timezone
 class CustomUser(AbstractUser):
     phone = models.CharField(max_length=10, default="1234567890", unique=True)
     mpin = models.CharField(max_length=5, default="00000")
+    state = models.CharField(max_length=100, default="Andhra Pradesh")
     groups = None
     user_permissions = None
 
@@ -20,9 +21,13 @@ class CustomUser(AbstractUser):
 class TeamDetail(models.Model):
     team_name = models.CharField(max_length=100, default="Team Name")
     team_leader = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    in_game_name = models.CharField(max_length=100, default="In Game Name")
     phone_number = models.CharField(max_length=10,null=False,blank=False, default="1234567890")
     optional_phone_number = models.CharField(max_length=10,null=True, blank=True, default="1234567890")
-        
+
+    def __str__(self) -> str:
+        return self.team_name + self.team_leader.username
+     
 class Tournament(models.Model):
     tournament_name = models.CharField(max_length=100, default="Tournament Name")
     slots_available = models.PositiveIntegerField(default=12)
@@ -39,16 +44,29 @@ class Tournament(models.Model):
     registration_time = models.DateTimeField(default=timezone.now())
     tournament_time = models.DateTimeField(default=timezone.now())
     participant_team_name = models.ManyToManyField(TeamDetail, related_name="participant_team_name", blank=True)
-
+    
     def __str__(self) -> str:
         return self.tournament_name
+    
+    def create_matches(self):
+        # Create up to 6 matches
+        for i in range(1, 7):
+            match_number = str(i)
+            Match.objects.create(tournament=self, match_number=match_number)
 
-class Matches(models.Model):
+class Match(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
-    match_number = models.CharField(max_length=100, default="Match Number")
+    match_number = models.CharField(max_length=100, default="1")
 
     class Meta:
         unique_together = (('tournament', 'match_number'),)
+    
+    def __str__(self) -> str:
+        return self.match_number
+    
+    def save(self, *args, **kwargs):
+        self.tournament.create_matches()
+        super().save()
 
 class UTRID(models.Model):
     """
@@ -59,6 +77,20 @@ class UTRID(models.Model):
 
     def __str__(self):
         return self.utr_id
+    
+    def save(self, *args, **kwargs):
+        """
+        Override the save method to update wallet balance when status changes to "approved".
+        """
+        transactions = Transaction.objects.filter(transaction_details=self.utr_id)
+        for transaction in transactions:
+            transaction.status = "Approved"
+            if transaction.status != "Approved":
+                wallet = transaction.user.wallet
+                if transaction.description == "Deposit":
+                    wallet.balance += transaction.amount
+            transaction.save()
+        super().save(*args, **kwargs)
 
 class Transaction(models.Model):
     """
@@ -71,7 +103,7 @@ class Transaction(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, default="Pending", choices=STATUS_CHOICES)
     transaction_details = models.CharField(max_length=255, blank=True)
-    utr_id = models.ForeignKey(UTRID, on_delete=models.SET_NULL, null=True, blank=True)  # Optional UTR ID
+    utr_id = models.ForeignKey(UTRID, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} {self.user.phone} {self.status} {self.description}"
@@ -129,3 +161,19 @@ class Wallet(models.Model):
             user=self.user, amount=-amount, description=description
         )
         return transaction
+
+class TeamStat(models.Model):
+    team = models.ForeignKey(TeamDetail, on_delete=models.CASCADE)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    match_number = models.ForeignKey(Match, on_delete=models.CASCADE) 
+    player_1 = models.IntegerField(default=0)
+    player_2 = models.IntegerField(default=0)
+    player_3 = models.IntegerField(default=0)
+    player_4 = models.IntegerField(default=0)
+    position_points = models.PositiveIntegerField(default=0) 
+
+    class Meta:
+        unique_together = (('team', 'tournament', 'match_number'),)
+
+    def __str__(self):
+        return f"{self.team.team_name} {self.tournament.tournament_name} {self.match_number.match_number}"

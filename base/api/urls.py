@@ -3,10 +3,16 @@ from . import views
 
 urlpatterns = [
     # Authentication and User Management
-    path('login', views.custom_login, name='login'),
+    path('login/', views.custom_login, name='login'),
     path('register/', views.register, name='register'),
     path('logout/', views.custom_logout, name='logout'),
+    path('change_mpin/', views.change_mpin, name='change_mpin'),
+    path('get_new_token/', views.get_new_token, name='get_new_token'),
+
+    #user info
     path('user_info/', views.user_info, name='user_info'),
+    path('user_tournaments/', views.user_tournaments, name='user_tournaments'),
+
 
     # Tournament Management
     path('tournaments/', views.tournaments, name='tournaments'),
