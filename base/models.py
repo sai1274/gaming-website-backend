@@ -2,13 +2,11 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
-
+# from .api.serializers import TeamDetailSerializer
 class CustomUser(AbstractUser):
     phone = models.CharField(max_length=10, default="1234567890", unique=True)
     mpin = models.CharField(max_length=5, default="00000")
     state = models.CharField(max_length=100, default="Andhra Pradesh")
-    groups = None
-    user_permissions = None
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)  # Call the base `save` method first
@@ -48,11 +46,12 @@ class Tournament(models.Model):
     def __str__(self) -> str:
         return self.tournament_name
     
-    def create_matches(self):
+    def save(self):
         # Create up to 6 matches
         for i in range(1, 7):
             match_number = str(i)
             Match.objects.create(tournament=self, match_number=match_number)
+        super().save()
 
 class Match(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -62,10 +61,13 @@ class Match(models.Model):
         unique_together = (('tournament', 'match_number'),)
     
     def __str__(self) -> str:
-        return self.match_number
+        return self.tournament.tournament_name +" " + self.match_number
     
-    def save(self, *args, **kwargs):
-        self.tournament.create_matches()
+    def submit_results(self):
+        teams_data = self.tournament.participant_team_name.all()
+        for team_data in teams_data:
+            team = TeamDetail.objects.get(pk = team_data.id)
+            TeamStat.objects.create(team = team, tournament = self.tournament, match_number = self)
         super().save()
 
 class UTRID(models.Model):
@@ -170,10 +172,31 @@ class TeamStat(models.Model):
     player_2 = models.IntegerField(default=0)
     player_3 = models.IntegerField(default=0)
     player_4 = models.IntegerField(default=0)
-    position_points = models.PositiveIntegerField(default=0) 
+    position_points = models.PositiveIntegerField(default=0)
+    booyah = models.PositiveIntegerField(default=0)
+    matches_played = models.PositiveIntegerField(default=0)
 
     class Meta:
         unique_together = (('team', 'tournament', 'match_number'),)
 
     def __str__(self):
         return f"{self.team.team_name} {self.tournament.tournament_name} {self.match_number.match_number}"
+
+    @classmethod
+    def aggregate_stats(cls, tournament):
+        team_stats = cls.objects.filter(tournament=tournament)
+        match_numbers = set(team_stat.match_number for team_stat in team_stats)
+        aggregated_stats = {}
+
+        for match_number in match_numbers:
+            match_stats = team_stats.filter(match_number=match_number)
+            aggregated_stats[match_number.match_number] = {
+                'player_1': sum(match_stat.player_1 for match_stat in match_stats),
+                'player_2': sum(match_stat.player_2 for match_stat in match_stats),
+                'player_3': sum(match_stat.player_3 for match_stat in match_stats),
+                'player_4': sum(match_stat.player_4 for match_stat in match_stats),
+                'position_points': sum(match_stat.position_points for match_stat in match_stats),
+                'matches_played': len(match_stats)
+            }
+
+        return aggregated_stats

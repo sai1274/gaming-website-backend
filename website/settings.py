@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "base.apps.BaseConfig",
     'simple_history',
     'rest_framework',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'simple_history.middleware.HistoryRequestMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "website.urls"
@@ -156,3 +158,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=3650),  # 10 years
     'REFRESH_TOKEN_LIFETIME': timedelta(days=3650),  # 10 years
 }
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]

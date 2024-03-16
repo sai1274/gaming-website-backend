@@ -23,5 +23,9 @@ urlpatterns = [
     path('wallet/', views.wallet, name='wallet'),
     path('deposit/', views.deposit, name='deposit'),
     path('withdraw/', views.withdraw, name='withdraw'),
-    path('match_details/<int:pk>/', views.match_details, name='match_details')
+    path('match_details/<int:pk>/', views.match_details, name='match_details'),
+
+    # Staff Management
+    path('stats/', views.edit_stats, name='stats'),
+    path('is_staff', views.is_staff, name='is_staff')
 ]
