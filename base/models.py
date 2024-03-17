@@ -48,9 +48,10 @@ class Tournament(models.Model):
     
     def save(self):
         # Create up to 6 matches
-        for i in range(1, 7):
-            match_number = str(i)
-            Match.objects.create(tournament=self, match_number=match_number)
+        if not self.pk:
+            for i in range(1, 7):
+                match_number = str(i)
+                Match.objects.create(tournament=self, match_number=match_number)
         super().save()
 
 class Match(models.Model):

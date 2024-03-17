@@ -90,7 +90,10 @@ def book_slot(request, pk):
     user_wallet = Wallet.objects.get(user=request.user)
     if user_wallet.balance < tournament.entry_fee:
         return Response(
-            {"error": "Insufficient balance"}, status=status.HTTP_400_BAD_REQUEST
+            {"error": "Insufficient balance",
+             "balance_amount" : user_wallet.balance,
+             "tournament_entry_fee" : tournament.entry_fee,
+             "user" : request.user.username}, status=status.HTTP_400_BAD_REQUEST
         )
 
     if tournament.slots_available < 1:
@@ -378,21 +381,14 @@ def edit_stats(request):
                 tournament=tournament, match_number=match
             )
             for team_stat in team_stats:
-                aggregate_stats[team_stat.team.team_name] = {
-                    "booyah": team_stat.booyah,
-                    "position_points": team_stat.position_points,
-                    "player_1": team_stat.player_1,
-                    "player_2": team_stat.player_2,
-                    "player_3": team_stat.player_3,
-                    "player_4": team_stat.player_4,
-                }
+                aggregate_stats[team_stat.team.team_name] = {}
                 aggregate_stats[team_stat.team.team_name]["booyah"] = (
                     aggregate_stats[team_stat.team.team_name].get("booyah", 0)
                     + team_stat.booyah
                 )
                 aggregate_stats[team_stat.team.team_name]["position_points"] = (
                     aggregate_stats[team_stat.team.team_name].get("position_points", 0)
-                    + team_stat.position_points
+                    + points[team_stat.position_points]
                 )
                 aggregate_stats[team_stat.team.team_name]["player_1"] = (
                     aggregate_stats[team_stat.team.team_name].get("player_1", 0)
@@ -421,7 +417,7 @@ def edit_stats(request):
                     + aggregate_stats[team_stat.team.team_name]["player_3"]
                     + aggregate_stats[team_stat.team.team_name]["player_4"]
                 )
-
+        return Response(aggregate_stats, status=status.HTTP_200_OK)
 
     if request.method == "POST":
         if not request.user.groups.filter(name="CustomStaff").exists():
@@ -438,7 +434,7 @@ def edit_stats(request):
             team_stat.player_2 = team_data["player_2"]
             team_stat.player_3 = team_data["player_3"]
             team_stat.player_4 = team_data["player_4"]
-            team_stat.position_points = points[int(team_data["position_points"])]
+            team_stat.position_points = int(team_data["position_points"])
             team_stat.booyah = 1 if team_data["booyah"] else 0
             team_stat.matches_played = 1 if team_data["matchplayed"] else 0
             team_stat.save()
