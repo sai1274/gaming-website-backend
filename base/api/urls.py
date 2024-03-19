@@ -26,6 +26,6 @@ urlpatterns = [
     path('match_details/<int:pk>/', views.match_details, name='match_details'),
 
     # Staff Management
-    path('stats/', views.edit_stats, name='stats'),
+    path('stats/<int:tournament>/<int:match>', views.edit_stats, name='stats'),
     path('is_staff', views.is_staff, name='is_staff')
 ]

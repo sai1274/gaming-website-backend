@@ -355,7 +355,7 @@ def change_mpin(request):
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
-def edit_stats(request):
+def edit_stats(request, match, tournament):
     points = {
         1: 12,
         2: 9,
@@ -372,8 +372,8 @@ def edit_stats(request):
     }
 
     if request.method == "GET":
-        match_number = request.data["match_number"]
-        tournament = Tournament.objects.get(pk=request.data["tournament_id"])
+        match_number = match
+        tournament = Tournament.objects.get(pk=tournament)
         aggregate_stats = {}
         for i in range(1, match_number + 1):
             match = Match.objects.get(tournament=tournament, match_number=i)
@@ -423,8 +423,8 @@ def edit_stats(request):
         if not request.user.groups.filter(name="CustomStaff").exists():
             return Response({"message": "Failure"}, status=status.HTTP_400_BAD_REQUEST)
 
-        tournament = Tournament.objects.get(pk=request.data["tournament_id"])
-        match = Match.objects.get(pk=request.data["match_id"])
+        tournament = Tournament.objects.get(pk=tournament)
+        match = Match.objects.get(pk=match)
         for team_data in request.data["teams"]:
             team = TeamDetail.objects.get(pk=team_data["teamId"])
             team_stat = TeamStat.objects.get_or_create(
