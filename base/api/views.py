@@ -430,14 +430,16 @@ def edit_stats(request, match, tournament):
             team_stat = TeamStat.objects.get_or_create(
                 team=team, tournament=tournament, match_number=match
             )
+            team_stat = team_stat[0]
             team_stat.player_1 = team_data["player_1"]
             team_stat.player_2 = team_data["player_2"]
             team_stat.player_3 = team_data["player_3"]
             team_stat.player_4 = team_data["player_4"]
             team_stat.position_points = int(team_data["position_points"])
             team_stat.booyah = 1 if team_data["booyah"] else 0
-            team_stat.matches_played = 1 if team_data["matchplayed"] else 0
+            team_stat.matches_played = 1 if team_data["matches_played"] else 0
             team_stat.save()
+        return Response({"message": "Success"}, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
