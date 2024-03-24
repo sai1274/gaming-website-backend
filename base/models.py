@@ -46,13 +46,15 @@ class Tournament(models.Model):
     def __str__(self) -> str:
         return self.tournament_name
     
-    def save(self):
-        # Create up to 6 matches
+    def save(self, *args, **kwargs):
         if not self.pk:
+            # Only create matches if the tournament is being saved for the first time
+            super().save(*args, **kwargs)  # Save the tournament first
             for i in range(1, 7):
                 match_number = str(i)
                 Match.objects.create(tournament=self, match_number=match_number)
-        super().save()
+        else:
+            super().save(*args, **kwargs)  # For updates, just save the tournament 
 
 class Match(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
