@@ -377,7 +377,8 @@ def edit_stats(request, match, tournament):
             match = match[0]
             team_stats = TeamStat.objects.filter(tournament=tournament, match_number=i)
             for team_stat in team_stats:
-                aggregate_stats[team_stat.team.team_name] = {}
+                if i == 1:
+                    aggregate_stats[team_stat.team.team_name] = {}
                 aggregate_stats[team_stat.team.team_name]["booyah"] = (
                     aggregate_stats[team_stat.team.team_name].get("booyah", 0)
                     + team_stat.booyah
