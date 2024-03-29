@@ -375,12 +375,8 @@ def edit_stats(request, match, tournament):
         for i in range(1, match_number + 1):
             match = Match.objects.get_or_create(tournament=tournament, match_number=i)
             match = match[0]
-            team_stats = TeamStat.objects.filter(
-                tournament=tournament, match_number=match
-            )
-            print(team_stats)
+            team_stats = TeamStat.objects.filter(tournament=tournament, match_number=i)
             for team_stat in team_stats:
-                print(team_stat, team_stat.__dict__)
                 aggregate_stats[team_stat.team.team_name] = {}
                 aggregate_stats[team_stat.team.team_name]["booyah"] = (
                     aggregate_stats[team_stat.team.team_name].get("booyah", 0)
@@ -417,7 +413,6 @@ def edit_stats(request, match, tournament):
                     + aggregate_stats[team_stat.team.team_name]["player_3"]
                     + aggregate_stats[team_stat.team.team_name]["player_4"]
                 )
-        print(aggregate_stats)
         return Response(aggregate_stats, status=status.HTTP_200_OK)
 
     if request.method == "POST":
