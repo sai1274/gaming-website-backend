@@ -152,6 +152,7 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",
+    "https://gaming-website-backend.onrender.com",
 ]
 
 SIMPLE_JWT = {
