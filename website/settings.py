@@ -26,7 +26,11 @@ SECRET_KEY = "django-insecure-&df%-2ra5mp5xq3isapnk*u9aj(y+fc8!p$8q+%78z&g#ir8^0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'gaming-website-backend.onrender.com',  # Add your domain here
+]
 
 
 # Application definition
@@ -137,6 +141,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://gaming-website-backend.onrender.com",
 ]
 
 APPEND_SLASH=False
