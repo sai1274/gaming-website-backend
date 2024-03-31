@@ -30,6 +30,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'gaming-website-backend.onrender.com',  # Add your domain here
+    'tomotaok.vercel.app'
 ]
 
 
@@ -142,6 +143,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://gaming-website-backend.onrender.com",
+    "https://tomotaok.vercel.app",
 ]
 
 APPEND_SLASH=False
@@ -158,6 +160,7 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:3000",
     "https://gaming-website-backend.onrender.com",
+    "https://tomotaok.vercel.app",
 ]
 
 SIMPLE_JWT = {
