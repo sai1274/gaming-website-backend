@@ -408,8 +408,7 @@ def edit_stats(request, match, tournament):
                     + team_stat.matches_played
                 )
                 aggregate_stats[team_stat.team.team_name]["kills"] = (
-                    aggregate_stats[team_stat.team.team_name].get("kills", 0)
-                    + aggregate_stats[team_stat.team.team_name]["player_1"]
+                    aggregate_stats[team_stat.team.team_name]["player_1"]
                     + aggregate_stats[team_stat.team.team_name]["player_2"]
                     + aggregate_stats[team_stat.team.team_name]["player_3"]
                     + aggregate_stats[team_stat.team.team_name]["player_4"]
