@@ -96,20 +96,21 @@ WSGI_APPLICATION = "website.wsgi.application"
 # }
 
 #Internal Database
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgres://admin:p2VmrY4oayynadG0Zn9SZRjsNMEdDNxr@dpg-co8e3rol5elc738tb0ug-a/database1_fz4l',
-        conn_max_age=600
-    )
-}
-
-#External Database
 # DATABASES = {
 #     'default': dj_database_url.config(
-#         default='postgres://admin:p2VmrY4oayynadG0Zn9SZRjsNMEdDNxr@dpg-co8e3rol5elc738tb0ug-a.singapore-postgres.render.com/database1_fz4l',
+#         default='postgres://admin:p2VmrY4oayynadG0Zn9SZRjsNMEdDNxr@dpg-co8e3rol5elc738tb0ug-a/database1_fz4l',
 #         conn_max_age=600
 #     )
 # }
+
+
+#External Database
+DATABASES = {
+    'default': dj_database_url.config(
+        default='postgres://admin:p2VmrY4oayynadG0Zn9SZRjsNMEdDNxr@dpg-co8e3rol5elc738tb0ug-a.singapore-postgres.render.com/database1_fz4l',
+        conn_max_age=600
+    )
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
