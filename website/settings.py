@@ -1,3 +1,4 @@
+import dj_database_url
 """
 Django settings for website project.
 
@@ -60,6 +61,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'simple_history.middleware.HistoryRequestMiddleware',
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = "website.urls"
@@ -86,13 +88,28 @@ WSGI_APPLICATION = "website.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+
+#Internal Database
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    'default': dj_database_url.config(
+        default='postgres://admin:p2VmrY4oayynadG0Zn9SZRjsNMEdDNxr@dpg-co8e3rol5elc738tb0ug-a/database1_fz4l',
+        conn_max_age=600
+    )
 }
 
+#External Database
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default='postgres://admin:p2VmrY4oayynadG0Zn9SZRjsNMEdDNxr@dpg-co8e3rol5elc738tb0ug-a.singapore-postgres.render.com/database1_fz4l',
+#         conn_max_age=600
+#     )
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
